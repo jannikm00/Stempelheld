@@ -99,19 +99,52 @@ fun cancelReminder(context: Context) {
 }
 
 fun scheduleTestReminder(context: Context) {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    // 1. Check for Exact Alarm permission (Android 12+)
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        if (!alarmManager.canScheduleExactAlarms()) {
+            // Redirect to settings if permission is missing to prevent crash
+            val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+            context.startActivity(intent)
+            Toast.makeText(context, "Bitte erlauben Sie exakte Alarme in den Einstellungen.", Toast.LENGTH_LONG).show()
+            return
+        }
+    }
+
+    // 2. Check for Notification permission (Android 13+)
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
         val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
             context, android.Manifest.permission.POST_NOTIFICATIONS
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        if (!hasPermission) return
+        if (!hasPermission) {
+            Toast.makeText(context, "Bitte Benachrichtigungen erlauben.", Toast.LENGTH_SHORT).show()
+            return
+        }
     }
 
-    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    // 3. Proceed with the alarm if permissions are granted
     val intent = Intent(context, AlarmReceiver::class.java)
-    val pendingIntent = PendingIntent.getBroadcast(context, 99, intent, PendingIntent.FLAG_IMMUTABLE)
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        99,
+        intent,
+        PendingIntent.FLAG_IMMUTABLE
+    )
+
     val triggerMillis = System.currentTimeMillis() + 5000
-    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMillis, pendingIntent)
-    Toast.makeText(context, "Test-Alarm in 5 Sekunden...", Toast.LENGTH_SHORT).show()
+
+    try {
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerMillis,
+            pendingIntent
+        )
+        Toast.makeText(context, "Test-Alarm in 5 Sekunden...", Toast.LENGTH_SHORT).show()
+    } catch (e: SecurityException) {
+        // Final fallback to prevent crash if something goes wrong
+        Toast.makeText(context, "Fehler: Exakte Alarme nicht erlaubt.", Toast.LENGTH_SHORT).show()
+    }
 }
 
 // --- UI Components ---
@@ -119,6 +152,10 @@ fun scheduleTestReminder(context: Context) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 1. Create the notification channel as soon as the app starts
+        createNotificationChannel()
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
         }
@@ -127,6 +164,24 @@ class MainActivity : ComponentActivity() {
             Stundenrechner2Theme {
                 TimeCalculatorScreen()
             }
+        }
+    }
+
+    // 2. Define the helper function to register the channel with the system
+    private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val name = "Erinnerungen"
+            val importance = android.app.NotificationManager.IMPORTANCE_HIGH // Must be HIGH
+            val channel = android.app.NotificationChannel("reminder_channel", name, importance).apply {
+                description = "Benachrichtigungen für das Ausstempeln"
+                // Optional: Enables lights and vibration for heads-up
+                enableLights(true)
+                enableVibration(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            }
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 }
