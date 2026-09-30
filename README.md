@@ -1,4 +1,4 @@
-# Arbeitszeit-Erinnerung
+# Stempelheld
 
 Eine kleine Android-App, die dabei hilft, das rechtzeitige Ausstempeln nicht zu vergessen.
 
