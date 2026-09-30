@@ -4,7 +4,7 @@ Eine kleine Android-App, die dabei hilft, das rechtzeitige Ausstempeln nicht zu 
 
 Ich hatte immer wieder das Problem, meine Arbeitszeit nicht rechtzeitig zu beenden oder schlicht zu vergessen, auszustempeln. Diese App wurde entwickelt, um genau dabei zu helfen.
 
-Das Grundprinzip basiert auf meiner ursprünglichen App [Stundenrechner](https://github.com/jannikm00/Stundenrechner). Während die alte Version lediglich die berechnete Arbeitszeit angezeigt hat, wurde die App durch Anregungen von Kollegen, insbesondere Yegor, komplett neu aufgesetzt und um Erinnerungen erweitert.
+Das Grundprinzip basiert auf meiner ursprünglichen App [Stundenrechner](https://github.com/jannikm00/Stundenrechner). Während die alte Version lediglich die berechnete Arbeitszeit angezeigt hat, wurde die App durch Anregungen von Kollegen, insbesondere Yegor, komplett neu aufgesetzt und um **Erinnerungen, individuelle Arbeitszeiten, eine überarbeitete Benutzeroberfläche und ein paar Easter Eggs** erweitert.
 
 ## So funktioniert's
 
