@@ -1,11 +1,15 @@
+# Arbeitszeit-Erinnerung
+
 Eine kleine Android-App, die dabei hilft, das rechtzeitige Ausstempeln nicht zu vergessen.
 
-Ich hatte immer wieder das Problem, dass ich meine Arbeitszeit nicht rechtzeitig beendet bzw. vergessen habe, auszustempeln. Diese App soll genau dabei helfen.
+Ich hatte immer wieder das Problem, meine Arbeitszeit nicht rechtzeitig zu beenden oder schlicht zu vergessen, auszustempeln. Diese App wurde entwickelt, um genau dabei zu helfen.
+
+Das Grundprinzip basiert auf meiner ursprünglichen App [Stundenrechner](https://github.com/jannikm00/Stundenrechner). Während die alte Version lediglich die berechnete Arbeitszeit angezeigt hat, wurde die App durch Anregungen von Kollegen, insbesondere Yegor, komplett neu aufgesetzt und um Erinnerungen erweitert.
 
 ## So funktioniert's
 
 1. **Einstempelzeit eingeben**
-2. Die App berechnet automatisch die entsprechende Ausstempelzeit.
+2. Die App berechnet automatisch die entsprechende **Ausstempelzeit**.
 3. **10 Minuten vorher** erhältst du eine Erinnerung.
 4. So bleibt genügend Zeit, um rechtzeitig auszustempeln.
 
