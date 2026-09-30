@@ -1,8 +1,18 @@
-<img width="920" height="2048" alt="WhatsApp Image 2026-09-30 at 18 05 33" src="https://github.com/user-attachments/assets/d7e68d13-8914-426a-b3c6-41bc51a76567" />Immer wieder hatte ich das Problem nicht pünktlich auszustempeln, diese App behebt diese Probleme.
-Einfach die Einstempelzeit eintragen und 10 min vorher eine Erinnerung erhalten!
+Eine kleine Android-App, die dabei hilft, das rechtzeitige Ausstempeln nicht zu vergessen.
 
-<img width="920" height="2048" alt="WhatsApp Image 2026-09-30 at 18 05 33" src="https://github.com/user-attachments/assets/30de7caf-ca6d-41e2-a472-c097934abb23" />
+Ich hatte immer wieder das Problem, dass ich meine Arbeitszeit nicht rechtzeitig beendet bzw. vergessen habe, auszustempeln. Diese App soll genau dabei helfen.
 
-<img width="920" height="2048" alt="WhatsApp Image 2026-09-30 at 18 05 33 (2)" src="https://github.com/user-attachments/assets/bfe74b4c-ad5f-4d29-b3bb-cb41ce601bde" />
+## So funktioniert's
 
-<img width="920" height="2048" alt="WhatsApp Image 2026-09-30 at 18 05 33 (1)" src="https://github.com/user-attachments/assets/3e32d44b-b5d3-40cf-8f08-e7cd285229f6" />
+1. **Einstempelzeit eingeben**
+2. Die App berechnet automatisch die entsprechende Ausstempelzeit.
+3. **10 Minuten vorher** erhältst du eine Erinnerung.
+4. So bleibt genügend Zeit, um rechtzeitig auszustempeln.
+
+### Screenshots
+
+<img width="920" height="2048" alt="Startseite" src="https://github.com/user-attachments/assets/30de7caf-ca6d-41e2-a472-c097934abb23" />
+
+<img width="920" height="2048" alt="Zeiteingabe" src="https://github.com/user-attachments/assets/bfe74b4c-ad5f-4d29-b3bb-cb41ce601bde" />
+
+<img width="920" height="2048" alt="Erinnerung" src="https://github.com/user-attachments/assets/3e32d44b-b5d3-40cf-8f08-e7cd285229f6" />
