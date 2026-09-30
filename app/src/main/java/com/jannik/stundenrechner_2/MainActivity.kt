@@ -247,7 +247,7 @@ fun TimeCalculatorScreen() {
 
             val uriHandler = LocalUriHandler.current
             TextButton(onClick = { uriHandler.openUri("https://jannikm00.github.io") }) {
-                Text("Programmiert mit <3 von Jannik Meiers", style = MaterialTheme.typography.labelSmall)
+                Text("Programmiert mit <3 von Jannik", style = MaterialTheme.typography.labelSmall)
             }
             Text(
                 text = "Made in Germany 🇩🇪",
