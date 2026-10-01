@@ -10,7 +10,7 @@ Das Grundprinzip basiert auf meiner ursprünglichen App [Stundenrechner](https:/
 
 1. **Einstempelzeit eingeben**
 2. Die App berechnet automatisch die entsprechende **Ausstempelzeit**.
-3. **10 Minuten vorher** erhältst du eine Erinnerung.
+3. **15 Minuten vorher** erhältst du eine Erinnerung.
 4. So bleibt genügend Zeit, um rechtzeitig auszustempeln.
 
 ## Screenshots
