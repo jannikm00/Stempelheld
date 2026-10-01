@@ -71,7 +71,7 @@ fun scheduleReminder(context: Context, resultTime: LocalTime) {
     val intent = Intent(context, AlarmReceiver::class.java)
     val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     val now = LocalDateTime.now()
-    var reminderDateTime = resultTime.minusMinutes(10).atDate(now.toLocalDate())
+    var reminderDateTime = resultTime.minusMinutes(15).atDate(now.toLocalDate())
     if (reminderDateTime.isBefore(now)) reminderDateTime = reminderDateTime.plusDays(1)
 
     val triggerMillis = reminderDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -107,7 +107,7 @@ fun scheduleTestReminder(context: Context) {
             // Redirect to settings if permission is missing to prevent crash
             val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
             context.startActivity(intent)
-            Toast.makeText(context, "Bitte erlauben Sie exakte Alarme in den Einstellungen.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Bitte Alarm erlauben.", Toast.LENGTH_LONG).show()
             return
         }
     }
@@ -140,10 +140,10 @@ fun scheduleTestReminder(context: Context) {
             triggerMillis,
             pendingIntent
         )
-        Toast.makeText(context, "Test-Alarm in 5 Sekunden...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Test in 5 Sekunden...", Toast.LENGTH_SHORT).show()
     } catch (e: SecurityException) {
         // Final fallback to prevent crash if something goes wrong
-        Toast.makeText(context, "Fehler: Exakte Alarme nicht erlaubt.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Fehler: Alarme nicht erlaubt.", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -264,6 +264,7 @@ fun TimeCalculatorScreen() {
             ) {
                 DurationButton("+6h") { resultTime = calculateFromPicker(timePickerState, 6, 0) }
                 DurationButton("+8:45h") { resultTime = calculateFromPicker(timePickerState, 8, 45) }
+                DurationButton("+10:45h") { resultTime = calculateFromPicker(timePickerState, 10, 45) }
                 DurationButton("+12:45h") { resultTime = calculateFromPicker(timePickerState, 12, 45) }
             }
 
@@ -290,7 +291,7 @@ fun TimeCalculatorScreen() {
                         Text(text = time.format(timeFormatter), style = MaterialTheme.typography.headlineSmall)
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { scheduleReminder(context, time) }, modifier = Modifier.weight(1f)) { Text("10 Min. vorher", style = MaterialTheme.typography.labelSmall) }
+                            Button(onClick = { scheduleReminder(context, time) }, modifier = Modifier.weight(1f)) { Text("15 Min. vorher", style = MaterialTheme.typography.labelSmall) }
                             OutlinedButton(onClick = { cancelReminder(context) }, modifier = Modifier.weight(1f)) { Text("Abbrechen", style = MaterialTheme.typography.labelSmall) }
                             TextButton(onClick = { scheduleTestReminder(context) }) { Text("Test", color = if (isRastaMode) Color.Black else MaterialTheme.colorScheme.primary) }
                         }

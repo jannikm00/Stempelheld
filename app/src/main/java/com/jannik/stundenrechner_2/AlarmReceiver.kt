@@ -15,7 +15,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Replace with your icon
-            .setContentTitle("Stundenrechner")
+            .setContentTitle("Stempelheld")
             .setContentText("Zeit zum Ausstempeln!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
