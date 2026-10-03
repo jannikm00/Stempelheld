@@ -1,4 +1,4 @@
-package com.jannik.stundenrechner_2
+package com.jannik.stempelheld
 
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

@@ -1,4 +1,4 @@
-package com.jannik.stundenrechner_2
+package com.jannik.stempelheld
 
 import android.app.AlarmManager
 import android.app.NotificationManager
@@ -47,7 +47,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val builder = NotificationCompat.Builder(context, "reminder_channel")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("Ausstempeln!")
-            .setContentText("Zeit zum Gehen. Tippen zum Stoppen.")
+            .setContentText("Zeit zu Gehen. Tippen zum Stoppen.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)

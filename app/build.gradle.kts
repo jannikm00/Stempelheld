@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.jannik.stundenrechner_2"
+    namespace = "com.jannik.stempelheld"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.jannik.stundenrechner_2"
+        applicationId = "com.jannik.stempelheld"
         minSdk = 30
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

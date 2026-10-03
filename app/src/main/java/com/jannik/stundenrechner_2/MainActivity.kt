@@ -1,4 +1,4 @@
-package com.jannik.stundenrechner_2
+package com.jannik.stempelheld
 
 import android.app.AlarmManager
 import android.app.PendingIntent
