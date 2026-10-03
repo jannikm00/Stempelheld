@@ -34,6 +34,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.draw.scale
 
 // --- Constants & Helper Functions ---
 
@@ -47,41 +48,62 @@ fun calculateFromPicker(state: TimePickerState, hours: Int, minutes: Int): Local
     return initialTime.plusHours(hours.toLong()).plusMinutes(minutes.toLong())
 }
 
+// Inside MainActivity.kt
+
 fun scheduleReminder(context: Context, resultTime: LocalTime) {
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
-            context, android.Manifest.permission.POST_NOTIFICATIONS
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-        if (!hasPermission) {
-            Toast.makeText(context, "Bitte Benachrichtigungen erlauben.", Toast.LENGTH_LONG).show()
-            return
-        }
-    }
-
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    // 1. Check Exact Alarm permission (Android 12+)
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
         if (!alarmManager.canScheduleExactAlarms()) {
             val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
             context.startActivity(intent)
+            Toast.makeText(context, "Bitte 'Exakte Alarme' erlauben.", Toast.LENGTH_LONG).show()
+            return
+        }
+    }
+
+    // 2. Check Notification permission (Android 13+)
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.POST_NOTIFICATIONS
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!hasPermission) {
+            Toast.makeText(context, "Bitte Benachrichtigungen erlauben.", Toast.LENGTH_SHORT).show()
             return
         }
     }
 
     val intent = Intent(context, AlarmReceiver::class.java)
-    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        0, // ID 0 for the real alarm
+        intent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+
     val now = LocalDateTime.now()
+    // Set reminder for 15 minutes before the calculated resultTime
     var reminderDateTime = resultTime.minusMinutes(15).atDate(now.toLocalDate())
+
+    // If the time has already passed today, schedule for tomorrow
     if (reminderDateTime.isBefore(now)) reminderDateTime = reminderDateTime.plusDays(1)
 
     val triggerMillis = reminderDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
     try {
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMillis, pendingIntent)
-        Toast.makeText(context, "Erinnerung für ${reminderDateTime.toLocalTime()} gesetzt!", Toast.LENGTH_SHORT).show()
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerMillis,
+            pendingIntent
+        )
+        val formattedTime = reminderDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+        Toast.makeText(context, "Erinnerung für $formattedTime gesetzt!", Toast.LENGTH_SHORT).show()
     } catch (e: SecurityException) {
-        Toast.makeText(context, "Fehler: Keine Berechtigung.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Fehler: Alarm-Berechtigung fehlt.", Toast.LENGTH_SHORT).show()
     }
 }
+
 
 fun cancelReminder(context: Context) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -147,8 +169,6 @@ fun scheduleTestReminder(context: Context) {
     }
 }
 
-// --- UI Components ---
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,10 +205,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeCalculatorScreen() {
+    // --- State Management ---
     var isCustomAddExpanded by remember { mutableStateOf(false) }
     val timePickerState = rememberTimePickerState(
         initialHour = LocalTime.now().hour,
@@ -204,27 +224,24 @@ fun TimeCalculatorScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Now checks the time currently selected in the picker
+    // Preferences for the repeating alarm toggle
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("alarm_prefs", Context.MODE_PRIVATE) }
+    var isRepeating by remember {
+        mutableStateOf(prefs.getBoolean("is_repeating", false))
+    }
+
     val isRastaMode = (timePickerState.hour == 4 && timePickerState.minute == 20) ||
             (timePickerState.hour == 16 && timePickerState.minute == 20)
 
     val backgroundModifier = if (isRastaMode) {
         Modifier.background(
             brush = Brush.verticalGradient(
-                // Red block
                 0.0f to RastaRed,
                 0.30f to RastaRed,
-
-                // Small gradient transition (Red -> Yellow)
                 0.35f to RastaYellow,
-
-                // Yellow block
                 0.60f to RastaYellow,
-
-                // Small gradient transition (Yellow -> Green)
                 0.65f to RastaGreen,
-
-                // Green block
                 1.0f to RastaGreen
             )
         )
@@ -248,10 +265,10 @@ fun TimeCalculatorScreen() {
             Text(
                 text = "Einstempelzeit",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 24.sp, // Change the size here
+                    fontSize = 24.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 ),
-                color = if (isRastaMode) Color.Black else MaterialTheme.colorScheme.primary // Change the color
+                color = if (isRastaMode) Color.Black else MaterialTheme.colorScheme.primary
             )
 
             Box(modifier = Modifier.wrapContentHeight()) {
@@ -274,33 +291,98 @@ fun TimeCalculatorScreen() {
 
             AnimatedVisibility(visible = isCustomAddExpanded) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = customHoursInput, onValueChange = { customHoursInput = it.filter { c -> c.isDigit() } }, label = { Text("Std") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                    OutlinedTextField(value = customMinutesInput, onValueChange = { customMinutesInput = it.filter { c -> c.isDigit() } }, label = { Text("Min") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                    Button(onClick = { resultTime = calculateFromPicker(timePickerState, customHoursInput.toIntOrNull() ?: 0, customMinutesInput.toIntOrNull() ?: 0) }) { Text("+") }
+                    OutlinedTextField(
+                        value = customHoursInput,
+                        onValueChange = { customHoursInput = it.filter { c -> c.isDigit() } },
+                        label = { Text("Std") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    OutlinedTextField(
+                        value = customMinutesInput,
+                        onValueChange = { customMinutesInput = it.filter { c -> c.isDigit() } },
+                        label = { Text("Min") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    Button(onClick = {
+                        resultTime = calculateFromPicker(
+                            timePickerState,
+                            customHoursInput.toIntOrNull() ?: 0,
+                            customMinutesInput.toIntOrNull() ?: 0
+                        )
+                    }) { Text("+") }
                 }
             }
 
+            // --- Result Display ---
             resultTime?.let { time ->
-                val context = LocalContext.current
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = if (isRastaMode) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.primaryContainer),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isRastaMode) Color.White.copy(alpha = 0.9f)
+                        else MaterialTheme.colorScheme.primaryContainer
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text("Ausstempeln vor", style = MaterialTheme.typography.labelSmall)
                         Text(text = time.format(timeFormatter), style = MaterialTheme.typography.headlineSmall)
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { scheduleReminder(context, time) }, modifier = Modifier.weight(1f)) { Text("15 Min. vorher", style = MaterialTheme.typography.labelSmall) }
-                            OutlinedButton(onClick = { cancelReminder(context) }, modifier = Modifier.weight(1f)) { Text("Abbrechen", style = MaterialTheme.typography.labelSmall) }
-                            TextButton(onClick = { scheduleTestReminder(context) }) { Text("Test", color = if (isRastaMode) Color.Black else MaterialTheme.colorScheme.primary) }
+                        // --- The "nerv mich" Toggle inside the Card ---
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "nerv mich ->",
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Switch(
+                                checked = isRepeating,
+                                onCheckedChange = { checked ->
+                                    isRepeating = checked
+                                    prefs.edit().putBoolean("is_repeating", checked).apply()
+                                },
+                                modifier = Modifier.scale(0.7f) // Keeps it small and tidy
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Button(
+                                onClick = { scheduleReminder(context, time) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("15 Min. vorher", style = MaterialTheme.typography.labelSmall)
+                            }
+                            OutlinedButton(
+                                onClick = { cancelReminder(context) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Abbrechen", style = MaterialTheme.typography.labelSmall)
+                            }
+                            TextButton(onClick = { scheduleTestReminder(context) }) {
+                                Text("Test", color = if (isRastaMode) Color.Black else MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
             }
+
             if (isRastaMode) Text("Die Zeit ist gekommen...", color = Color.DarkGray)
+
             Spacer(modifier = Modifier.weight(1f))
 
+            // --- Footer ---
             val uriHandler = LocalUriHandler.current
             TextButton(onClick = { uriHandler.openUri("https://jannikm00.github.io") }) {
                 Text("Programmiert mit <3 von Jannik", style = MaterialTheme.typography.labelSmall)
@@ -318,8 +400,8 @@ fun TimeCalculatorScreen() {
                     }
                 },
                 style = MaterialTheme.typography.labelMedium.copy(
-                    fontSize = 14.sp, // Increased size
-                    letterSpacing = 2.sp // Added character spacing for style
+                    fontSize = 14.sp,
+                    letterSpacing = 2.sp
                 ),
                 color = if (isRastaMode) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
             )
